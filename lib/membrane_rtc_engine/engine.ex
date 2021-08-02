@@ -340,6 +340,13 @@ defmodule Membrane.RTC.Engine do
     {:ok, state}
   end
 
+  # @impl true
+  # def handle_notification(:ice_restart_ended, {:endpoint, peer_id}, _ctx, state) do
+  #   state = update_in(state, :running_ice_restarts_counter, &(&1 - 1))
+
+  #   {:ok, state}
+  # end
+
   @impl true
   def handle_notification({:new_track, track_id, encoding}, endpoint_bin_name, ctx, state) do
     Membrane.Logger.info(

@@ -39,7 +39,9 @@ defmodule Membrane.RTC.Engine.MixProject do
   defp deps do
     [
       {:membrane_core, "~> 0.7.0"},
-      {:membrane_webrtc_plugin, "0.1.0-alpha"},
+      # {:membrane_webrtc_plugin, "0.1.0-alpha"},
+      # {:membrane_webrtc_plugin, path: "/Users/feliks/membrane/membrane_webrtc_plugin"},
+      {:membrane_webrtc_plugin, git: "git@github.com:membraneframework/membrane_webrtc_plugin.git", branch: "non-concurrent_ice_restart"},
       {:membrane_element_tee, "~> 0.5.0"},
       {:membrane_element_fake, "~> 0.5.0"},
       {:jason, "~> 1.2"},
