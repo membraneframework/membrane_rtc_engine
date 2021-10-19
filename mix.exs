@@ -8,6 +8,7 @@ defmodule Membrane.RTC.Engine.MixProject do
     [
       app: :membrane_rtc_engine,
       version: @version,
+      dialyzer: dialyzer(),
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -40,8 +41,7 @@ defmodule Membrane.RTC.Engine.MixProject do
     [
       {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
-      {:membrane_element_tee, "~> 0.5.0"},
-      {:membrane_element_fake, "~> 0.5.0"},
+      {:membrane_node_proxy, "~> 0.1.0", github: "geometerio/membrane_node_proxy"},
       {:jason, "~> 1.2"},
       {:dialyxir, "1.1.0", only: :dev, runtime: false},
       {:ex_doc, "0.24.2", only: :dev, runtime: false},
@@ -67,6 +67,12 @@ defmodule Membrane.RTC.Engine.MixProject do
       files:
         ~w(lib mix.exs .formatter.exs LICENSE README.md) ++
           ~w(assets/js assets/package.json assets/package-lock.json assets/tsconfig.json assets/esbuild.js package.json)
+    ]
+  end
+
+  defp dialyzer do
+    [
+      plt_add_deps: :app_tree
     ]
   end
 

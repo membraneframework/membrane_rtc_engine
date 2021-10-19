@@ -5,6 +5,8 @@ defmodule Membrane.RTC.Engine.MediaEvent do
   @type to_t() :: peer_id_t() | :broadcast
   @type sfu_media_event_t() :: {:sfu_media_event, to_t(), binary()}
 
+  @type track_id() :: Membrane.WebRTC.Track.id()
+
   @spec create_peer_accepted_event(peer_id_t(), map()) :: sfu_media_event_t()
   def create_peer_accepted_event(peer_id, peers) do
     peers =
@@ -61,7 +63,7 @@ defmodule Membrane.RTC.Engine.MediaEvent do
     |> do_create(:broadcast)
   end
 
-  @spec create_tracks_removed_event(peer_id_t(), map()) ::
+  @spec create_tracks_removed_event(peer_id_t(), list(track_id())) ::
           sfu_media_event_t()
   def create_tracks_removed_event(peer_id, track_ids) do
     %{
