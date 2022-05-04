@@ -41,12 +41,7 @@ jobs:
 
     steps:
       - checkout
-      - run: mix deps.get
-      - run: cd ./integration_test/test_videoroom && mix deps.get
-      - run: cd ./integration_test/test_videoroom && mix compile --force --warnings-as-errors
-      - run: cd ./integration_test/test_videoroom && npm ci --prefix=assets
-      - run: cd ./integration_test/test_videoroom && mix test
-
+      - run: mix integration_test
 
 
 workflows:
