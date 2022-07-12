@@ -829,7 +829,8 @@ defmodule Membrane.RTC.Engine do
     {subscriptions, pending_subscriptions} =
       Enum.split_with(state.pending_subscriptions, &(&1.track_id == track_id))
 
-    {subscription_links, state} = fulfill_subscriptions(subscriptions, ctx, state)
+    {subscription_links, state} =
+      fulfill_subscriptions(subscriptions, ctx, state, [base_tee_name])
 
     links = [track_link] ++ subscription_links
     state = %{state | pending_subscriptions: pending_subscriptions}
@@ -1237,13 +1238,13 @@ defmodule Membrane.RTC.Engine do
     end
   end
 
-  defp fulfill_subscriptions(subscriptions, ctx, state) do
+  defp fulfill_subscriptions(subscriptions, ctx, state, prepared_raw_format_tees \\ []) do
     # Attempt to fulfill multiple subscriptions. This is done so in simultaneous subscriptions
     # to the raw format can be fulfilled by linking just one pair of raw format filter/tee.
     #
     # After all links were built, the subscriptions are added to the state.
 
-    raw_format_links = build_raw_format_links(subscriptions, ctx, state)
+    raw_format_links = build_raw_format_links(subscriptions, ctx, state, prepared_raw_format_tees)
     subscription_links = build_subscription_links(subscriptions, state)
     links = raw_format_links ++ subscription_links
 
@@ -1256,12 +1257,15 @@ defmodule Membrane.RTC.Engine do
     end)
   end
 
-  defp build_raw_format_links(subscriptions, ctx, state) do
+  defp build_raw_format_links(subscriptions, ctx, state, prepared_raw_format_tees) do
     subscriptions
     |> Stream.filter(&(&1.format == :raw))
     |> Stream.map(& &1.track_id)
     |> Stream.uniq()
-    |> Stream.reject(&Map.has_key?(ctx.children, {:raw_format_tee, &1}))
+    |> Stream.reject(fn track_id ->
+      raw_tee = {:raw_format_tee, track_id}
+      Map.has_key?(ctx.children, raw_tee) or raw_tee in prepared_raw_format_tees
+    end)
     |> Enum.map(&build_raw_format_link(&1, state))
   end
 

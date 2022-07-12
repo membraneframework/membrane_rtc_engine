@@ -6,6 +6,8 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
   use Membrane.Bin
 
   alias Membrane.RTC.Engine
+  alias Membrane.H264
+  alias Membrane.FLV
   require Membrane.Logger
 
   @type encoding_t() :: String.t()
@@ -25,12 +27,12 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
 
   def_output_pad :output,
     demand_unit: :buffers,
-    caps: :any,
+    caps: {H264, stream_format: :byte_stream},
     availability: :on_request
 
   @impl true
   def handle_init(opts) do
-    state = %{rtc_engine: opts.rtc_engine, path: opts.file_path, track: opts.track}
+    state = %{rtc_engine: opts.rtc_engine, file_path: opts.file_path, track: opts.track}
 
     {:ok, state}
   end
@@ -47,6 +49,7 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
         source: %Membrane.File.Source{
           location: state.file_path
         },
+        demuxer: FLV.Demuxer,
         parser: %Membrane.H264.FFmpeg.Parser{
           attach_nalus?: true,
           skip_until_parameters?: false
@@ -54,6 +57,8 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
       },
       links: [
         link(:source)
+        |> to(:demuxer)
+        |> via_out(Pad.ref(:video, 0))
         |> to(:parser)
         |> to_bin_output(pad)
       ]
@@ -64,6 +69,11 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
 
   @impl true
   def handle_other({:new_tracks, []}, _ctx, state) do
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_other({:remove_tracks, []}, _ctx, state) do
     {:ok, state}
   end
 
