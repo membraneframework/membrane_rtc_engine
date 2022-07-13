@@ -1,9 +1,10 @@
 defmodule Membrane.RTC.Utils do
   @moduledoc false
 
-  alias Membrane.RTP.PayloadFormatResolver
   require OpenTelemetry.Tracer, as: Tracer
   require Membrane.TelemetryMetrics
+
+  alias Membrane.RTP.PayloadFormatResolver
 
   @rtp_packet_arrival_event [Membrane.RTC.Engine, :RTP, :packet, :arrival]
 

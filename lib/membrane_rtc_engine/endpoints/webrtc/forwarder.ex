@@ -3,13 +3,13 @@ defmodule Membrane.RTC.Engine.Endpoint.WebRTC.Forwarder do
   # Module responsible for forwarding RTP packets.
   # It takes care of rewriting RTP header and parts of RTP payload.
 
+  require Membrane.Pad
+  require Membrane.Logger
+
   alias Membrane.Pad
   alias Membrane.RTC.Engine.Endpoint
   alias Membrane.RTC.Engine.Endpoint.WebRTC.RTPMunger
   alias Membrane.RTC.Engine.Endpoint.WebRTC.VP8Munger
-
-  require Membrane.Pad
-  require Membrane.Logger
 
   @typedoc """
   * `selected_encoding` - encoding currently being forwarded.

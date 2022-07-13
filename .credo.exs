@@ -93,7 +93,7 @@
         #
         ## Readability Checks
         #
-        {Credo.Check.Readability.AliasOrder, []},
+        {Credo.Check.Readability.AliasOrder, [priority: :normal]},
         {Credo.Check.Readability.FunctionNames, []},
         {Credo.Check.Readability.LargeNumbers, []},
         {Credo.Check.Readability.MaxLineLength, [priority: :low, max_length: 120]},
@@ -112,6 +112,7 @@
         {Credo.Check.Readability.TrailingWhiteSpace, []},
         {Credo.Check.Readability.UnnecessaryAliasExpansion, []},
         {Credo.Check.Readability.VariableNames, []},
+        {Credo.Check.Readability.WithSingleClause, false},
 
         #
         ## Refactoring Opportunities
@@ -126,7 +127,7 @@
         {Credo.Check.Refactor.NegatedConditionsWithElse, []},
         {Credo.Check.Refactor.Nesting, []},
         {Credo.Check.Refactor.UnlessWithElse, []},
-        {Credo.Check.Refactor.WithClauses, false},
+        {Credo.Check.Refactor.WithClauses, []},
 
         #
         ## Warnings
@@ -156,9 +157,10 @@
         #
         # Controversial and experimental checks (opt-in, just replace `false` with `[]`)
         #
-        {Credo.Check.Readability.StrictModuleLayout, priority: :normal},
+        {Credo.Check.Readability.StrictModuleLayout,
+         priority: :normal, order: ~w/shortdoc moduledoc behaviour use import require alias/a},
         {Credo.Check.Consistency.MultiAliasImportRequireUse, false},
-        {Credo.Check.Consistency.UnusedVariableNames, []},
+        {Credo.Check.Consistency.UnusedVariableNames, force: :meaningful},
         {Credo.Check.Design.DuplicatedCode, false},
         {Credo.Check.Readability.AliasAs, false},
         {Credo.Check.Readability.MultiAlias, false},

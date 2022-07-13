@@ -27,8 +27,10 @@ if Enum.all?(
     ```
     """
     use Membrane.Bin
-    alias Membrane.RTC.Engine
+
     require Membrane.Logger
+
+    alias Membrane.RTC.Engine
 
     @opus_deps [Membrane.Opus.Decoder, Membrane.AAC.Parser, Membrane.AAC.FDK.Encoder]
 
