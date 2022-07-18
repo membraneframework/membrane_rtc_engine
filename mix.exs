@@ -76,7 +76,7 @@ defmodule Membrane.RTC.Engine.MixProject do
 
       # Test deps
       {:membrane_file_plugin, "~> 0.12.0"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.21.5"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.21.5", only: :test},
       {:membrane_flv_plugin, "~> 0.2.0", only: :test, runtime: false},
       {:bimap, "~> 1.2", override: true},
 

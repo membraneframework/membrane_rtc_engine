@@ -268,7 +268,7 @@ defmodule Membrane.RTC.Engine do
   @type track_ready_action_t() ::
           {:notify,
            {:track_ready, Track.id(), Track.encoding(),
-            depayloading_filter :: Membrane.ParentSpec.child_spec_t()}}
+            depayloading_filter :: Membrane.ParentSpec.child_spec_t() | nil}}
 
   @typedoc """
   Membrane action that will generate Custom Media Event.
@@ -815,13 +815,15 @@ defmodule Membrane.RTC.Engine do
 
     track = get_in(state, [:endpoints, endpoint_id]) |> Endpoint.get_track_by_id(track_id)
 
-    {base_tee_name, state} =
-      if track.format == [:raw] do
-        {{:raw_format_tee, track_id}, state}
-      else
-        state = put_in(state, [:filters, track_id], depayloading_filter)
-        {{:tee, track_id}, state}
-      end
+    state =
+      if track.format != [:raw] and :raw in track.format,
+        do: put_in(state, [:filters, track_id], depayloading_filter),
+        else: state
+
+    base_tee_name =
+      if track.format == [:raw],
+        do: {:raw_format_tee, track_id},
+        else: {:tee, track_id}
 
     track_link = build_track_link(base_tee_name, rid, track, endpoint_id, ctx, state)
 
