@@ -50,6 +50,7 @@ defmodule Membrane.RTC.Engine.MixProject do
 
   defp deps do
     [
+      {:ecto_sql, "~> 3.7"},
       {:membrane_opentelemetry, "~> 0.1.0"},
       {:membrane_core, "~> 0.10.0"},
       {:membrane_telemetry_metrics, "~> 0.1.0"},

@@ -1,0 +1,12 @@
+version: '3.7'
+services:
+  timescale:
+    image: timescale/timescaledb:2.5.1-pg14
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=membrane_rtc_engine
+    volumes:
+      - ./postgresql.conf:/opt/bitnami/postgresql/conf/postgresql.conf
