@@ -1,12 +1,12 @@
 # Simulcast
 
-Simulcast is a technique where a client sends multiple encodings of the same video to the server and the server is responsbile for choosing and forwarding proper encoding to proper receiver (other client). The encoding selection is dynamic (i.e. SFU switches between encodings in time) and it is based on:
+Simulcast is a technique where a client sends multiple encodings of the same video to the server and the server is responsible for choosing and forwarding proper encoding to proper receiver (other client). The encoding selection is dynamic (i.e. SFU switches between encodings in time) and it is based on:
 
-* receiver awailable bandwidth
+* receiver available bandwidth
 * receiver preferences (e.g. explicit request to receive video in HD resolution instead of FHD)
-* UI layaout (e.g. videos being displayed in smaller video tiles will be sent in a lower resolution)
+* UI layout (e.g. videos being displayed in smaller video tiles will be sent in a lower resolution)
 
-At the moment, Membrane supports only receiver preferences i.e. receiver can chose which encoding it is willing to receive. Additionaly, sender can turn off/on specific encoding. Membrane RTC Engine will detect changes and switch to another available encoding.
+At the moment, Membrane supports only receiver preferences i.e. receiver can chose which encoding it is willing to receive. Additionally, sender can turn off/on specific encoding. Membrane RTC Engine will detect changes and switch to another available encoding.
 
 ## Turning simulcast on/off
 
@@ -29,8 +29,8 @@ Encodings that are turned off might still be enabled using `enableTrackEncoding`
 
 > #### Minimal required resolution {: .warning}
 >
-> To make all encodings working, original track resolution has to be at least 1280x720.
-> In other case, browser might not be able to scale resolution down.
+> To ensure that all encodings work, original track resolution has to be at least 1280x720.
+> Otherwise, browser might not be able to scale resolution down.
 > In case of browser, original track resolution can be specified in constraints
 > passed to [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) 
 > or [`getDisplayMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia).
@@ -52,7 +52,7 @@ For example
 
 Here we turn simulcast on and choose medium encoding for each track to be forwarded to the client.
 
-On the other hand, setting `enabled` to `false` will result in rejecting all incoming simulcast tracks i.e. client will not send them to the server.
+On the other hand, setting `enabled` to `false` will result in a `RuntimeError` whenever a simulcast track is offered, as it would be considered an illegal state.
 
 ## Disabling and enabling specific track encoding
 
