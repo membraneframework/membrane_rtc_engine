@@ -264,11 +264,12 @@ defmodule Membrane.RTC.Engine do
 
   @typedoc """
   Membrane action that will inform RTC Engine about track readiness.
+  Depayloading_filter should be nil only, when track that is ready has only one format and it is raw.
   """
   @type track_ready_action_t() ::
           {:notify,
            {:track_ready, Track.id(), Track.encoding(),
-            depayloading_filter :: Membrane.ParentSpec.child_spec_t()}}
+            depayloading_filter :: Membrane.ParentSpec.child_spec_t() | nil}}
 
   @typedoc """
   Membrane action that will generate Custom Media Event.
@@ -813,9 +814,22 @@ defmodule Membrane.RTC.Engine do
       "New incoming #{encoding} track #{track_id} from endpoint #{inspect(endpoint_id)}"
     )
 
-    state = put_in(state, [:filters, track_id], depayloading_filter)
     track = get_in(state, [:endpoints, endpoint_id]) |> Endpoint.get_track_by_id(track_id)
-    track_link = build_track_link(track_id, rid, track, endpoint_id, ctx, state)
+
+    depayloading_filter =
+      if track.format == [:raw] and depayloading_filter != nil do
+        Membrane.Logger.debug(
+          "New incoming track #{track_id} in raw format from endpoint #{inspect(endpoint_id)} pass not nil depayloading filter "
+        )
+
+        nil
+      else
+        depayloading_filter
+      end
+
+    state = put_in(state, [:filters, track_id], depayloading_filter)
+
+    track_link = build_track_link(rid, track, endpoint_id, ctx, state)
 
     # check if there are subscriptions for this track and fulfill them
     {subscriptions, pending_subscriptions} =
@@ -1110,26 +1124,31 @@ defmodule Membrane.RTC.Engine do
   # - build_track_tee_push_output/2 - Convenience function, builds a Push Output tee
   #
 
-  defp build_track_link(track_id, rid, track, endpoint_id, ctx, state) do
+  defp build_track_link(rid, track, endpoint_id, ctx, state) do
+    base_tee_name =
+      if track.format == [:raw],
+        do: {:raw_format_tee, track.id},
+        else: {:tee, track.id}
+
     is_simulcast? = rid != nil
-    telemetry_label = [peer_id: endpoint_id, track_id: "#{track_id}:#{rid}"]
+    telemetry_label = [peer_id: endpoint_id, track_id: "#{track.id}:#{rid}"]
     telemetry_label = Keyword.merge(state.telemetry_label, telemetry_label)
 
     link({:endpoint, endpoint_id})
-    |> via_out(Pad.ref(:output, {track_id, rid}))
+    |> via_out(Pad.ref(:output, {track.id, rid}))
     |> then(fn link ->
       if is_simulcast? do
         options = [telemetry_label: telemetry_label]
-        via_in(link, Pad.ref(:input, {track_id, rid}), options: options)
+        via_in(link, Pad.ref(:input, {track.id, rid}), options: options)
       else
         link
       end
     end)
     |> then(fn link ->
-      if Map.has_key?(ctx.children, {:tee, track_id}) do
-        to(link, {:tee, track_id})
+      if Map.has_key?(ctx.children, base_tee_name) do
+        to(link, base_tee_name)
       else
-        to(link, {:tee, track_id}, build_track_tee(track_id, rid, track, telemetry_label, state))
+        to(link, base_tee_name, build_track_tee(track.id, rid, track, telemetry_label, state))
       end
     end)
   end
@@ -1251,9 +1270,11 @@ defmodule Membrane.RTC.Engine do
   defp build_raw_format_links(subscriptions, ctx, state) do
     subscriptions
     |> Stream.filter(&(&1.format == :raw))
-    |> Stream.map(& &1.track_id)
-    |> Stream.uniq()
-    |> Stream.reject(&Map.has_key?(ctx.children, {:raw_format_tee, &1}))
+    |> Stream.map(&get_track(&1.track_id, state.endpoints))
+    |> Stream.uniq_by(& &1.id)
+    |> Stream.reject(
+      &(Map.has_key?(ctx.children, {:raw_format_tee, &1.id}) or &1.format == [:raw])
+    )
     |> Enum.map(&build_raw_format_link(&1, state))
   end
 
