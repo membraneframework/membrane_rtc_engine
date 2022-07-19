@@ -264,6 +264,7 @@ defmodule Membrane.RTC.Engine do
 
   @typedoc """
   Membrane action that will inform RTC Engine about track readiness.
+  Depayloading_filter should be nil only, when track that is ready has only one format and it is raw.
   """
   @type track_ready_action_t() ::
           {:notify,
@@ -815,24 +816,26 @@ defmodule Membrane.RTC.Engine do
 
     track = get_in(state, [:endpoints, endpoint_id]) |> Endpoint.get_track_by_id(track_id)
 
-    state =
-      if track.format != [:raw] and :raw in track.format,
-        do: put_in(state, [:filters, track_id], depayloading_filter),
-        else: state
+    depayloading_filter =
+      if track.format == [:raw] and depayloading_filter != nil do
+        Membrane.Logger.debug(
+          "New incoming track #{track_id} in raw format from endpoint #{inspect(endpoint_id)} pass not nil depayloading filter "
+        )
 
-    base_tee_name =
-      if track.format == [:raw],
-        do: {:raw_format_tee, track_id},
-        else: {:tee, track_id}
+        nil
+      else
+        depayloading_filter
+      end
 
-    track_link = build_track_link(base_tee_name, rid, track, endpoint_id, ctx, state)
+    state = put_in(state, [:filters, track_id], depayloading_filter)
+
+    track_link = build_track_link(rid, track, endpoint_id, ctx, state)
 
     # check if there are subscriptions for this track and fulfill them
     {subscriptions, pending_subscriptions} =
       Enum.split_with(state.pending_subscriptions, &(&1.track_id == track_id))
 
-    {subscription_links, state} =
-      fulfill_subscriptions(subscriptions, ctx, state, [base_tee_name])
+    {subscription_links, state} = fulfill_subscriptions(subscriptions, ctx, state)
 
     links = [track_link] ++ subscription_links
     state = %{state | pending_subscriptions: pending_subscriptions}
@@ -1121,7 +1124,12 @@ defmodule Membrane.RTC.Engine do
   # - build_track_tee_push_output/2 - Convenience function, builds a Push Output tee
   #
 
-  defp build_track_link(base_tee_name, rid, track, endpoint_id, ctx, state) do
+  defp build_track_link(rid, track, endpoint_id, ctx, state) do
+    base_tee_name =
+      if track.format == [:raw],
+        do: {:raw_format_tee, track.id},
+        else: {:tee, track.id}
+
     is_simulcast? = rid != nil
     telemetry_label = [peer_id: endpoint_id, track_id: "#{track.id}:#{rid}"]
     telemetry_label = Keyword.merge(state.telemetry_label, telemetry_label)
@@ -1240,13 +1248,13 @@ defmodule Membrane.RTC.Engine do
     end
   end
 
-  defp fulfill_subscriptions(subscriptions, ctx, state, prepared_raw_format_tees \\ []) do
+  defp fulfill_subscriptions(subscriptions, ctx, state) do
     # Attempt to fulfill multiple subscriptions. This is done so in simultaneous subscriptions
     # to the raw format can be fulfilled by linking just one pair of raw format filter/tee.
     #
     # After all links were built, the subscriptions are added to the state.
 
-    raw_format_links = build_raw_format_links(subscriptions, ctx, state, prepared_raw_format_tees)
+    raw_format_links = build_raw_format_links(subscriptions, ctx, state)
     subscription_links = build_subscription_links(subscriptions, state)
     links = raw_format_links ++ subscription_links
 
@@ -1259,15 +1267,14 @@ defmodule Membrane.RTC.Engine do
     end)
   end
 
-  defp build_raw_format_links(subscriptions, ctx, state, prepared_raw_format_tees) do
+  defp build_raw_format_links(subscriptions, ctx, state) do
     subscriptions
     |> Stream.filter(&(&1.format == :raw))
-    |> Stream.map(& &1.track_id)
-    |> Stream.uniq()
-    |> Stream.reject(fn track_id ->
-      raw_tee = {:raw_format_tee, track_id}
-      Map.has_key?(ctx.children, raw_tee) or raw_tee in prepared_raw_format_tees
-    end)
+    |> Stream.map(&get_track(&1.track_id, state.endpoints))
+    |> Stream.uniq_by(& &1.id)
+    |> Stream.reject(
+      &(Map.has_key?(ctx.children, {:raw_format_tee, &1.id}) or &1.format == [:raw])
+    )
     |> Enum.map(&build_raw_format_link(&1, state))
   end
 

@@ -1,7 +1,7 @@
 defmodule Membrane.RTC.Engine.Support.FileEndpoint do
   @moduledoc false
 
-  # Endpoint that publish data from file
+  # Endpoint that publishes data from a file
 
   use Membrane.Bin
 
@@ -18,7 +18,7 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
               ],
               file_path: [
                 spec: Path.t(),
-                description: "Path of file"
+                description: "Path to track file"
               ],
               track: [
                 spec: Engine.Track.t(),
@@ -49,16 +49,14 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
         source: %Membrane.File.Source{
           location: state.file_path
         },
-        demuxer: FLV.Demuxer,
         parser: %Membrane.H264.FFmpeg.Parser{
           attach_nalus?: true,
-          skip_until_parameters?: false
+          skip_until_parameters?: false,
+          framerate: {60, 1}
         }
       },
       links: [
         link(:source)
-        |> to(:demuxer)
-        |> via_out(Pad.ref(:video, 0))
         |> to(:parser)
         |> to_bin_output(pad)
       ]

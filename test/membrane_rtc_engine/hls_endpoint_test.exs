@@ -23,13 +23,13 @@ defmodule Membrane.RTC.HLSEndpointTest do
   end
 
   describe "HLS Endpoint test" do
-    test "FileEndpoint send media to HLS Endpoint", %{rtc_engine: rtc_engine} do
+    test "creates correct hls stream", %{rtc_engine: rtc_engine} do
       peer_id = "file-endpoint-peer"
       metadata = %{"display_name" => "test_peer"}
 
       add_peer(rtc_engine, peer_id, metadata)
 
-      file_name = "h264.flv"
+      file_name = "video.h264"
       file_path = Path.join(@fixtures_dir, file_name)
 
       hls_endpoint_id = "hls-endpoint"
