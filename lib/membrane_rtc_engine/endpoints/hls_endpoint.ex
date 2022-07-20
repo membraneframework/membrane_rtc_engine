@@ -107,23 +107,26 @@ if Enum.all?(
       {:endpoint, endpoint_id} = ctx.name
       tracks = Enum.filter(tracks, fn track -> :raw in track.format end)
 
-      Enum.reduce(tracks, state, fn track, state ->
-        case Engine.subscribe(state.rtc_engine, endpoint_id, track.id, :raw) do
-          :ok ->
-            put_in(state, [:tracks, track.id], track)
+      state =
+        Enum.reduce(tracks, state, fn track, state ->
+          case Engine.subscribe(state.rtc_engine, endpoint_id, track.id, :raw) do
+            :ok ->
+              put_in(state, [:tracks, track.id], track)
 
-          {:error, :invalid_track_id} ->
-            Membrane.Logger.debug("""
-            Couldn't subscribe to track: #{inspect(track.id)}. No such track.
-            It had to be removed just after publishing it. Ignoring.
-            """)
+            {:error, :invalid_track_id} ->
+              Membrane.Logger.debug("""
+              Couldn't subscribe to track: #{inspect(track.id)}. No such track.
+              It had to be removed just after publishing it. Ignoring.
+              """)
 
-            state
+              state
 
-          {:error, reason} ->
-            raise "Couldn't subscribe for track: #{inspect(track.id)}. Reason: #{inspect(reason)}"
-        end
-      end)
+            {:error, reason} ->
+              raise "Couldn't subscribe for track: #{inspect(track.id)}. Reason: #{inspect(reason)}"
+          end
+        end)
+
+      {:ok, state}
     end
 
     @impl true
