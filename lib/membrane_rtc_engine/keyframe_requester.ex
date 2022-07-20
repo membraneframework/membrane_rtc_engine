@@ -27,7 +27,7 @@ defmodule Membrane.KeyframeRequester do
   end
 
   @impl true
-  def handle_start_of_stream(:input, _ctx, state) do
+  def handle_prepared_to_playing(_ctx, state) do
     {{:ok, [@kf_request_action, {:start_timer, {:send_event, state.interval}}]}, state}
   end
 
