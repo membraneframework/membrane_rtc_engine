@@ -1,13 +1,12 @@
 defmodule Membrane.RTC.Engine.Support.FileEndpoint do
   @moduledoc false
 
-  # Endpoint that publishes data from a file
+  # Endpoint that publishes data from a file. It will start publishing data when it receives message :start.
 
   use Membrane.Bin
 
   alias Membrane.RTC.Engine
   alias Membrane.H264
-  alias Membrane.FLV
   require Membrane.Logger
 
   @type encoding_t() :: String.t()
@@ -28,7 +27,7 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
   def_output_pad :output,
     demand_unit: :buffers,
     caps: {H264, stream_format: :byte_stream},
-    availability: :on_request
+    availability: :on_request,
 
   @impl true
   def handle_init(opts) do
@@ -48,16 +47,10 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
       children: %{
         source: %Membrane.File.Source{
           location: state.file_path
-        },
-        parser: %Membrane.H264.FFmpeg.Parser{
-          attach_nalus?: true,
-          skip_until_parameters?: false,
-          framerate: {60, 1}
         }
       },
       links: [
         link(:source)
-        |> to(:parser)
         |> to_bin_output(pad)
       ]
     }
@@ -76,7 +69,7 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
   end
 
   @impl true
-  def handle_other({:custom_media_event, "start_track"}, _ctx, state) do
+  def handle_other(:start, _ctx, state) do
     {{:ok, notify: {:track_ready, state.track.id, nil, state.track.encoding, nil}}, state}
   end
 end

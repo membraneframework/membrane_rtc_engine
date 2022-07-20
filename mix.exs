@@ -107,7 +107,7 @@ defmodule Membrane.RTC.Engine.MixProject do
       extras: extras(),
       formatters: ["html"],
       groups_for_extras: groups_for_extras(),
-      assets: "internal_docs/simulcast/assets",
+      assets: "internal_docs/assets",
       source_ref: "v#{@version}",
       nest_modules_by_prefix: [Membrane.RTC.Engine.Endpoint, Membrane.RTC.Engine.Message],
       before_closing_body_tag: &before_closing_body_tag/1,

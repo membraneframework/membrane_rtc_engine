@@ -8,6 +8,6 @@ Case with multiple format is shown in the upper part of the diagram below.
 Case with track only in raw format is show in the lower part of diagram below.
 
 
-## Architecture
+## Engine Architecture
 
-![Alt text](assets/tee_diagram.svg)
+![Alt text](assets/tee_diagram.drawio.svg)

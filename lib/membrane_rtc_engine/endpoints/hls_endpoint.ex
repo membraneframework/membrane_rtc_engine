@@ -62,6 +62,13 @@ if Enum.all?(
                   description: """
                   Max duration of stream that will be stored. Segments that are older than window duration will be removed.
                   """
+                ],
+                framerate: [
+                  spec: {integer(), integer()} | nil,
+                  description: """
+                  Framerate of tracks
+                  """,
+                  default: nil
                 ]
 
     @impl true
@@ -73,7 +80,8 @@ if Enum.all?(
         output_directory: opts.output_directory,
         owner: opts.owner,
         hls_mode: opts.hls_mode,
-        target_window_duration: opts.target_window_duration
+        target_window_duration: opts.target_window_duration,
+        framerate: opts.framerate
       }
 
       {:ok, state}
@@ -152,8 +160,8 @@ if Enum.all?(
         hls_links_and_children(
           link_builder,
           track.encoding,
-          track_id,
-          track.stream_id
+          track,
+          state.framerate
         )
 
       {spec, state} =
@@ -182,46 +190,47 @@ if Enum.all?(
       {{:ok, spec: spec}, state}
     end
 
-    defp hls_links_and_children(link_builder, :OPUS, track_id, stream_id),
+    defp hls_links_and_children(link_builder, :OPUS, track, _framerate),
       do: %ParentSpec{
         children: %{
-          {:opus_decoder, track_id} => Membrane.Opus.Decoder,
-          {:aac_encoder, track_id} => Membrane.AAC.FDK.Encoder,
-          {:aac_parser, track_id} => %Membrane.AAC.Parser{out_encapsulation: :none}
+          {:opus_decoder, track.id} => Membrane.Opus.Decoder,
+          {:aac_encoder, track.id} => Membrane.AAC.FDK.Encoder,
+          {:aac_parser, track.id} => %Membrane.AAC.Parser{out_encapsulation: :none}
         },
         links: [
           link_builder
-          |> to({:opus_decoder, track_id})
-          |> to({:aac_encoder, track_id})
-          |> to({:aac_parser, track_id})
-          |> via_in(Pad.ref(:input, {:audio, track_id}), options: [encoding: :AAC])
-          |> to({:hls_sink_bin, stream_id})
+          |> to({:opus_decoder, track.id})
+          |> to({:aac_encoder, track.id})
+          |> to({:aac_parser, track.id})
+          |> via_in(Pad.ref(:input, {:audio, track.id}), options: [encoding: :AAC])
+          |> to({:hls_sink_bin, track.stream_id})
         ]
       }
 
-    defp hls_links_and_children(link_builder, :AAC, track_id, stream_id),
+    defp hls_links_and_children(link_builder, :AAC, track, _framerate),
       do: %ParentSpec{
         children: %{},
         links: [
           link_builder
-          |> via_in(Pad.ref(:input, {:audio, track_id}), options: [encoding: :AAC])
-          |> to({:hls_sink_bin, stream_id})
+          |> via_in(Pad.ref(:input, {:audio, track.id}), options: [encoding: :AAC])
+          |> to({:hls_sink_bin, track.stream_id})
         ]
       }
 
-    defp hls_links_and_children(link_builder, :H264, track_id, stream_id),
+    defp hls_links_and_children(link_builder, :H264, track, framerate),
       do: %ParentSpec{
         children: %{
-          {:video_parser, track_id} => %Membrane.H264.FFmpeg.Parser{
+          {:video_parser, track.id} => %Membrane.H264.FFmpeg.Parser{
             alignment: :au,
-            attach_nalus?: true
+            attach_nalus?: true,
+            framerate: framerate
           }
         },
         links: [
           link_builder
-          |> to({:video_parser, track_id})
-          |> via_in(Pad.ref(:input, {:video, track_id}), options: [encoding: :H264])
-          |> to({:hls_sink_bin, stream_id})
+          |> to({:video_parser, track.id})
+          |> via_in(Pad.ref(:input, {:video, track.id}), options: [encoding: :H264])
+          |> to({:hls_sink_bin, track.stream_id})
         ]
       }
   end

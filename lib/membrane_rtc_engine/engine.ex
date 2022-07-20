@@ -415,6 +415,17 @@ defmodule Membrane.RTC.Engine do
   end
 
   @doc """
+  Sends message to RTC Engine endpoint.
+  If endpoint doesn't exist message is ignored
+  """
+  @spec message_endpoint(rtc_engine :: pid(), endpoint_id :: String.t(), message :: any()) ::
+          :ok
+  def message_endpoint(rtc_engine, endpoint_id, message) do
+    send(rtc_engine, {:endpoint_message, {:endpoint, endpoint_id}, message})
+    :ok
+  end
+
+  @doc """
   Subscribes endpoint for tracks.
 
   Endpoint  will be notified about track readiness in `c:Membrane.Bin.handle_pad_added/3` callback.
@@ -635,6 +646,11 @@ defmodule Membrane.RTC.Engine do
   end
 
   @impl true
+  def handle_other({:endpoint_message, endpoint, message}, _ctx, state) do
+    {{:ok, forward: {endpoint, message}}, state}
+  end
+
+  @impl true
   def handle_notification(notifcation, {:endpoint, endpoint_id}, ctx, state) do
     if Map.has_key?(state.endpoints, endpoint_id) do
       handle_endpoint_notification(notifcation, endpoint_id, ctx, state)
@@ -819,7 +835,7 @@ defmodule Membrane.RTC.Engine do
     depayloading_filter =
       if track.format == [:raw] and depayloading_filter != nil do
         Membrane.Logger.debug(
-          "New incoming track #{track_id} in raw format from endpoint #{inspect(endpoint_id)} pass not nil depayloading filter "
+          "Track #{track_id} has depayloading filter specified but it is in raw format only. Ignoring depayloading filter."
         )
 
         nil
@@ -1125,7 +1141,7 @@ defmodule Membrane.RTC.Engine do
   #
 
   defp build_track_link(rid, track, endpoint_id, ctx, state) do
-    base_tee_name =
+    tee_name =
       if track.format == [:raw],
         do: {:raw_format_tee, track.id},
         else: {:tee, track.id}
@@ -1145,10 +1161,10 @@ defmodule Membrane.RTC.Engine do
       end
     end)
     |> then(fn link ->
-      if Map.has_key?(ctx.children, base_tee_name) do
-        to(link, base_tee_name)
+      if Map.has_key?(ctx.children, tee_name) do
+        to(link, tee_name)
       else
-        to(link, base_tee_name, build_track_tee(track.id, rid, track, telemetry_label, state))
+        to(link, tee_name, build_track_tee(track.id, rid, track, telemetry_label, state))
       end
     end)
   end
