@@ -55,14 +55,6 @@ defmodule Membrane.RTC.Engine.PushOutputTee do
 
   @impl true
   def handle_process(:input, %Membrane.Buffer{} = buffer, ctx, state) do
-    pad_linked? =
-      ctx.pads
-      |> Map.keys()
-      |> Enum.filter(&(&1 == {Membrane.Pad, :output, {:endpoint, "hls-endpoint"}}))
-      |> Enum.empty?()
-
-    IO.inspect(not pad_linked?, label: :tee_buffer)
-
     Membrane.RTC.Utils.emit_packet_arrival_event(
       buffer.payload,
       state.codec,

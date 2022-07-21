@@ -27,7 +27,7 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
   def_output_pad :output,
     demand_unit: :buffers,
     caps: {H264, stream_format: :byte_stream},
-    availability: :on_request,
+    availability: :on_request
 
   @impl true
   def handle_init(opts) do
@@ -47,10 +47,16 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
       children: %{
         source: %Membrane.File.Source{
           location: state.file_path
+        },
+        parser: %Membrane.H264.FFmpeg.Parser{
+          attach_nalus?: true,
+          skip_until_parameters?: false,
+          framerate: {60, 1}
         }
       },
       links: [
         link(:source)
+        |> to(:parser)
         |> to_bin_output(pad)
       ]
     }
