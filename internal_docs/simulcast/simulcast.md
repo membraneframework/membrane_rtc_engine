@@ -1,15 +1,15 @@
 # Simulcast
 
 Simulcast is a technique where a client sends multiple encodings of the same video to the server
-and the server is responsbile for choosing and forwarding proper encoding to proper receiver (other client).
+and the server is responsible for choosing and forwarding proper encoding to proper receiver (other client).
 The encoding selection is dynamic (i.e. SFU switches between encodings in time) and it is based on:
-* receiver awailable bandwidth
+* receiver available bandwidth
 * receiver preferences (e.g. explicit request to receive video in HD resolution instead of FHD)
-* UI layaout (e.g. videos being displayed in smaller video tiles will be sent in lower resolution)
+* UI layout (e.g. videos being displayed in smaller video tiles will be sent in lower resolution)
 
 At the moment, Membrane supports only receiver preferences i.e. receiver can chose which encoding
 it is willing to receive.
-Additionaly, sender can turn off/on specific encoding. 
+Additionally, sender can turn off/on specific encoding. 
 Membrane RTC Engine will detect changes and switch to another available encoding.
 
 ## Codecs
@@ -36,7 +36,7 @@ It encapsulates mungers (described below).
 Mungers are responsible for modyfing RTP packets so that switching between encodings is transparent
 for the receiver.
 Currently, there are two mungers: RTP Munger and VP8 Munger. 
-H264 doesn't require modyfing its RTP packets so there is no H264 Munger.
+H264 doesn't require modifying its RTP packets so there is no H264 Munger.
 
 ### RTP Munger
 
@@ -59,8 +59,8 @@ when some encoding is no longer active it informs all `Forwarders`.
 ## Disabling Simulcast
 
 Simulcast can be disabled per WebRTC Endpoint.
-At the moment, if client offers simulcast but we don't accept it, we will
-disable the whole track.
+At the moment if client offers simulcast but we don't accept it, we raise, causing
+the Endpoint in question to crash and the Peer to be removed from the session.
 This is not compliant with WebRTC standard as we should only remove SDP attributes 
 related to simulcast and be prepared for receiving one encoding.
 However, in such a case browser changes SSRC after ICE restart and 

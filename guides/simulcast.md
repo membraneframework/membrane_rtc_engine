@@ -29,8 +29,8 @@ Encodings that are turned off might still be enabled using `enableTrackEncoding`
 
 > #### Minimal required resolution {: .warning}
 >
-> To make all encodings working, original track resolution has to be at least 1280x720.
-> In other case, browser might not be able to scale resolution down.
+> To ensure that all encodings work, original track resolution has to be at least 1280x720.
+> Otherwise, browser might not be able to scale resolution down.
 > In case of browser, original track resolution can be specified in constraints
 > passed to [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) 
 > or [`getDisplayMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia).
@@ -58,7 +58,7 @@ alias Membrane.WebRTC.Extension.{Mid, Rid, TWCC}
 
 Here we turn simulcast on and choose medium encoding for each track to be forwarded to the client.
 
-On the other hand, setting `enabled` to `false` will result in rejecting all incoming simulcast tracks i.e. client will not send them to the server.
+On the other hand, setting `enabled` to `false` will result in a `RuntimeError` whenever a simulcast track is offered, as it would be considered an illegal state.
 
 ## Disabling and enabling specific track encoding
 
