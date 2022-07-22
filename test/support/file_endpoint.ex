@@ -1,12 +1,13 @@
 defmodule Membrane.RTC.Engine.Support.FileEndpoint do
   @moduledoc false
 
-  # Endpoint that publishes data from a file. It will start publishing data when it receives message :start.
+  # Endpoint that publishes data from a file in realtime. It will start publishing data when it receives message :start.
+  # Buffers from file must have timestamps, because it will be used in Realtimer.
 
   use Membrane.Bin
 
   alias Membrane.RTC.Engine
-  alias Membrane.H264
+
   require Membrane.Logger
 
   @type encoding_t() :: String.t()
@@ -22,16 +23,31 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
               track: [
                 spec: Engine.Track.t(),
                 description: "Track to publish"
+              ],
+              processing_children: [
+                spec: %{any() => Membrane.ParentSpec.child_spec_t()},
+                description: "Children required for processing input from file."
+              ],
+              processing_link: [
+                spec:
+                  (Membrane.ParentSpec.link_builder_t() -> Membrane.ParentSpec.link_builder_t()),
+                description: "Function which link source with processing children"
               ]
 
   def_output_pad :output,
     demand_unit: :buffers,
-    caps: {H264, stream_format: :byte_stream},
+    caps: :any,
     availability: :on_request
 
   @impl true
   def handle_init(opts) do
-    state = %{rtc_engine: opts.rtc_engine, file_path: opts.file_path, track: opts.track}
+    state = %{
+      rtc_engine: opts.rtc_engine,
+      file_path: opts.file_path,
+      track: opts.track,
+      processing_children: opts.processing_children,
+      processing_link: opts.processing_link
+    }
 
     {:ok, state}
   end
@@ -43,20 +59,19 @@ defmodule Membrane.RTC.Engine.Support.FileEndpoint do
 
   @impl true
   def handle_pad_added(Pad.ref(:output, {track_id, _rid}) = pad, _ctx, state) do
-    spec = %ParentSpec{
-      children: %{
-        source: %Membrane.File.Source{
-          location: state.file_path
-        },
-        parser: %Membrane.H264.FFmpeg.Parser{
-          attach_nalus?: true,
-          skip_until_parameters?: false,
-          framerate: {60, 1}
-        }
+    base_children = %{
+      source: %Membrane.File.Source{
+        location: state.file_path
       },
+      realtimer: Membrane.Realtimer
+    }
+
+    spec = %ParentSpec{
+      children: Map.merge(base_children, state.processing_children),
       links: [
         link(:source)
-        |> to(:parser)
+        |> then(state.processing_link)
+        |> to(:realtimer)
         |> to_bin_output(pad)
       ]
     }

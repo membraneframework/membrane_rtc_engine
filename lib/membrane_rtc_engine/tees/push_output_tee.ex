@@ -54,7 +54,7 @@ defmodule Membrane.RTC.Engine.PushOutputTee do
   end
 
   @impl true
-  def handle_process(:input, %Membrane.Buffer{} = buffer, ctx, state) do
+  def handle_process(:input, %Membrane.Buffer{} = buffer, _ctx, state) do
     Membrane.RTC.Utils.emit_packet_arrival_event(
       buffer.payload,
       state.codec,
