@@ -1,6 +1,7 @@
 version: 2.0
 jobs:
   test:
+    resource_class: large
     docker:
       - image: membraneframeworklabs/docker_membrane:latest
         environment:
@@ -14,6 +15,7 @@ jobs:
       - run: mix test
 
   lint:
+    resource_class: large
     docker:
       - image: membraneframeworklabs/docker_membrane:latest
         environment:
@@ -30,6 +32,7 @@ jobs:
       - run: mix docs && mix docs 2>&1 | (! grep -q "warning:")
 
   integration_test:
+    resource_class: large
     docker:
       - image: membraneframeworklabs/docker_membrane:latest
         environment:
