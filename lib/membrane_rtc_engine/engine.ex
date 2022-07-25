@@ -195,6 +195,10 @@ defmodule Membrane.RTC.Engine do
 
   import Membrane.RTC.Utils
 
+  require Membrane.Logger
+  require Membrane.OpenTelemetry
+  require Membrane.TelemetryMetrics
+
   alias Membrane.RTC.Engine.{
     DisplayManager,
     Endpoint,
@@ -207,10 +211,6 @@ defmodule Membrane.RTC.Engine do
     Subscription,
     Track
   }
-
-  require Membrane.Logger
-  require Membrane.OpenTelemetry
-  require Membrane.TelemetryMetrics
 
   @registry_name Membrane.RTC.Engine.Registry.Dispatcher
 

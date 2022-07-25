@@ -8,16 +8,16 @@ defmodule Membrane.RTC.Engine.Endpoint.WebRTC do
 
   import Membrane.RTC.Utils
 
-  alias Membrane.WebRTC.{SDP, EndpointBin}
-  alias Membrane.WebRTC
-  alias Membrane.RTC.Engine
-  alias ExSDP.Attribute.FMTP
-  alias ExSDP.Attribute.RTPMapping
-  alias Membrane.RTC.Engine.Endpoint.WebRTC.SimulcastConfig
-
   require Membrane.Logger
   require Membrane.OpenTelemetry
   require Membrane.TelemetryMetrics
+
+  alias ExSDP.Attribute.FMTP
+  alias ExSDP.Attribute.RTPMapping
+  alias Membrane.RTC.Engine
+  alias Membrane.RTC.Engine.Endpoint.WebRTC.SimulcastConfig
+  alias Membrane.WebRTC
+  alias Membrane.WebRTC.{EndpointBin, SDP}
 
   @track_metadata_event [Membrane.RTC.Engine, :track, :metadata, :event]
   @peer_metadata_event [Membrane.RTC.Engine, :peer, :metadata, :event]
